@@ -1,0 +1,339 @@
+﻿TRAINING_DATA_TYPE,QUESTIONS,CONTENT,ALTERNATE QUESTIONS
+sql,Can you retrieve product information for active customers? ,"SELECT PRODUCT_DIVISION, PRODUCT_DIVISION_CODE,CUSTOMER_CODE,CUSTOMER_NAME,CUSTOMER_GROUP FROM STG_CUSTOMER_MASTER WHERE UDC_ACTIVE_CUST = 1;","1.	Mention product divisions and customer details that are associated with active customers.
+2.	Can you provide a list of active customers along with their product division, division code, and customer group?
+3.	Retrieve the customer codes and names for all active customers in the system, along with their product division and group information.
+4.	List customers which belong to specific product divisions and are currently marked as active in the STG_CUSTOMER_MASTER table.
+5.	List the product division and customer information for all customers marked as active."
+sql,Give me sales history by SKU and location,"SELECT pm.TYPE, pm.PRODUCT,sh.LOCATION,  sum(sh.QUANTITY) as SALES, sh.SALES_DATE FROM PRODUCT_MASTER pm JOIN SALES_HISTORY sh ON pm.PRODUCT = sh.PRODUCT WHERE pm.TYPE LIKE '%SKU%' group by pm.PRODUCT,sh.LOCATION, sh.SALES_DATE, pm.TYPE ORDER BY sh.SALES_DATE; ","1.	Give the total quantity sold for each product type in different locations, grouped by sales date.
+2.	Can you provide the sales summary for each product type, including the product name, location, and total sales, for a specific date range?
+3.	Mention number of units of each SKU type that were sold per location, with results organized by sales date.
+4.	Give the sales figures for all products categorized as SKUs, broken down by location and sales date.
+5.	Can you show the total sales for each SKU type by location and sales date?"
+sql,Give the customers that are mapped to a HR Product Group.,"SELECT PRODUCT_DIVISION,PRODUCT_DIVISION_CODE,CUSTOMER_CODE FROM STG_CUSTOMER_MASTER WHERE product_division = 'HRC';","1.	Give the customer codes associated with the 'HR' product division.
+2.	Mention customer codes belonging to the 'HR' product division.
+3.	What product division and customer code details do we have for the 'HR' division?"
+sql,List forecast data for last month at lowest level.,"SELECT f.PRODUCT, f.CUSTOMER, f.LOCATION,  FORECASTDATE AS FORECAST_DATE, f.FORECAST AS FORECAST_QUANTITY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 and FORECASTDATE = FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-dd-MM');","1.	Give details of products and customers include their forecast quantities for the last month.
+2.	Obtain forecast data for products at level 111, including customer and location information for the previous month.
+3.	Give the last month forecast quantities by product and customer for locations at level 111.
+4.	Show records of forecasted quantities for products, customers, and locations from the last month.
+5.	List forecasts by product and customer for locations categorized at level 111 for the previous month."
+sql,List the forecast data for future 3 months at higher level.,"SELECT f.PRODUCT, f.CUSTOMER, f.LOCATION,  FORECAST_DATE, f.QUANTITY as FORECAST_QUANTITY FROM FORECAST f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE l.LEVEL = 2  AND p.LEVEL = 6 AND c.CUSTOMER_LEVEL = 7 and FORECAST_DATE IN ( FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())+1, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())+2, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())+3, 0), 'yyyy-dd-MM'));","1.	Give the forecast quantities for each product, customer, and location for the next three months.
+2.	Show the products and customers that have forecast data for locations at level 2 for upcoming three months.
+3.	Retrieve forecast information for products at level 6 and customers at level 7 for the next three months.
+4.	What records exist for forecast quantities by product and customer for locations categorized at level 2 for the next three months?
+5.	Give details available for forecasted quantities for customers and products in the level 672 over the next three months.
+6.	What is the forecast data for products, customers, and locations where the levels meet specified criteria for the upcoming months?
+7.	Show how forecast quantities for each product and customer vary for the next three forecast dates in locations at level 2."
+sql,Show me sales data by customer region level.,"SELECT h.CUSTOMER, h.SALES_DATE, sum(h.QUANTITY) as SALES_QUANTITY, c.REGION FROM [SALES_HISTORY] h JOIN [CUSTOMER_MASTER] c ON h.CUSTOMER = c.CUSTOMER WHERE c.CUSTOMER_LEVEL = 1 group by h.CUSTOMER, h.SALES_DATE, c.REGION;","1.	What is the total sales quantity by customer and sales date for customers at level 1?
+2.	Can we find the total sales quantity and associated region for each customer at level 1 by sales date?
+3.	How do sales quantities vary by customer and sales date for customers categorized at level 1?"
+sql,Show me top 10 high sales volume SKU and location having low forecast accuracy.,"SELECT top 10 f.product, f.customer, f.location, f.forecastdate AS FORECAST_DATE, SUM(f.FORECAST) AS FORECAST_QUANTITY, SUM(f.SALES) AS ACTUAL_SALES,  CASE  WHEN f.MAPE > 100 THEN 0 ELSE (100 - f.MAPE) END AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE lag in (1,2,3) and (l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1) and forecastdate= DATEFROMPARTS(YEAR(GETDATE()), 1, MONTH(GETDATE())) GROUP BY f.product, f.customer, f.location, f.forecastdate, f.MAPE order by ACTUAL_SALES desc, FORECAST_ACCURACY asc;	
+","1.	What are the top 10 products, customers, and locations with the highest actual sales and their corresponding forecast accuracy?
+2.	Identify the forecast quantities and actual sales along with the accuracy for products and customers for a current month.
+3.	Tell me the details that are available regarding forecast accuracy for the top products and customers based on actual sales.
+4.	Can we retrieve the accuracy for top products, their customers, and locations along with forecast and actual sales data for level 111?
+5.	Compare the forecast quantities and actual sales for the top 10 entries, considering the level 111 for locations, products, and customers."
+sql,Compare forecast accuracy against actual sales at lowest level for previous month.,"SELECT f.PRODUCT, f.CUSTOMER, f.LOCATION, f.START_DATE, f.FORECAST AS FORECAST_QUANTITY, f.SALES AS ACTUAL_SALES, (100 - f.MAPE) AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION  LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE  l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 AND lag=0 and f.START_DATE = DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0);
+","1.	Evaluate the relationship between forecast quantities and actual sales for the previous month.
+2.	Analyze forecast accuracy for products and customers at the lowest level based on last month’s data.
+3.	Assess the performance of forecasts in terms of accuracy and actual sales for the previous month.
+4.	Investigate the forecast and sales figures for products and customers categorized at level 111 from last month.
+5.	Determine the forecast accuracy for products and customers at the lowest level based on actual sales for the previous month.
+6.	Review the accuracy of forecasts compared to actual sales for the lowest level products, customers and location for last month."
+sql,Show me the top 10 customers by total sales volume as per previous month.,"SELECT TOP 10 sh.CUSTOMER, sh.SALES_DATE, SUM(sh.QUANTITY) AS Total_Sales FROM [SALES_HISTORY] sh LEFT JOIN CUSTOMER_MASTER C ON C.CUSTOMER=sh.CUSTOMER WHERE sh.SALES_DATE = FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-dd-MM') AND c.CUSTOMER_LEVEL = 1 GROUP BY  sh.CUSTOMER, sh.SALES_DATE ORDER BY Total_Sales DESC;","1.	List the top 10 customers with the highest sales from last month.
+2.	Provide an overview of the top customers ranked by total sales volume for the last month.
+3.	Highlight the top 10 customers based on their total sales quantity for the previous month's sales date.
+4.	Who are the top 10 customers based on total sales figures from last month?
+5.	Which customers achieved the highest sales volume for the previous month?
+6.	Can you provide a ranking of the top 10 customers by total sales for last month?
+7.	What are the names of the top customers by sales quantity recorded for the previous month?"
+sql,Analyze sales history by region and product division for last 36 months.,"SELECT sh.CUSTOMER, sh.PRODUCT, SUM(sh.QUANTITY) AS SALES,sh.SALES_DATE FROM [SALES_HISTORY] sh LEFT JOIN [PRODUCT_MASTER] p ON sh.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON sh.CUSTOMER = c.CUSTOMER WHERE c.CUSTOMER_LEVEL = 7 AND p.LEVEL = 6 AND sh.SALES_DATE BETWEEN DATEADD(MONTH, -36, CAST(GETDATE() AS DATE)) AND GETDATE() GROUP BY sh.CUSTOMER, sh.PRODUCT, sh.SALES_DATE;
+","1.	Evaluate the total sales by customer and product over the last 36 months.
+2.	What are the sales trends for specific products among customers at level 7 during the past three years?
+3.	Examine how sales quantities have changed by customer and product over the previous three years.
+4.	What are the total sales figures for customers and products for the last 36 months?"
+sql,Give the forecast quantity for a product across multiple locations for future 3 months.,"SELECT f.PRODUCT, f.LOCATION, SUM(f.QUANTITY) AS FORECAST_QUANTITY,f.forecast_date AS FORECAST_DATE  FROM [FORECAST] f WHERE f.FORECAST_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())+1, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())+2, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())+3, 0), 'yyyy-dd-MM')) GROUP BY f.PRODUCT, f.LOCATION,f.forecast_date; 
+","1.	Give the forecasted quantity for each product by location for the next three months.
+2.	Show the forecast quantities for products across various locations for the upcoming three months.
+3.	Can you provide the forecast data for products and locations for the next three months?
+4.	Identify the forecast quantities for different products in multiple locations for the upcoming three months."
+sql,List the active customers along with their sales offices.,"select cm.customer as CUSTOMER_CODE, cm.DESCRIPTION AS CUSTOMER_NAME, cm.SALES_OFFICE from [CUSTOMER_MASTER] cm where cm.ACTIVE_CUSTOMER='TRUE';","1.	Identify all active customers and their corresponding sales office details.
+2.	What are the names and codes of active customers along with their sales offices?
+3.	Show me the list of active customers and the sales offices they are associated with.
+4.	Can you provide details of active customers, including their customer codes and sales offices?
+5.	Retrieve the active customer information along with their sales office assignments."
+sql,Give a list of all replenishment SKUs for all locations.,"select SKU AS PRODUCT,LOCATION, SCM_STRATEGY AS STRATEGY from [REPLENISHMENT_SKU];","1.	What are the replenishment SKUs along with their associated locations and strategies?
+2.	List all SKUs used for replenishment across different locations and their corresponding strategies.
+3.	Can you provide details of replenishment SKUs, including their locations and supply chain strategies?"
+sql,Give the last 3 months sales history for STP_MS_WEST_Mumbai HO customer and HRPO_CL_HSLA_1.50-1.99_1101-1890 product.,"select customer AS CUSTOMER, product AS PRODUCT, location AS LOCATION, SUM(quantity) AS SALES, SALES_DATE from [SALES_HISTORY] where customer='STP_MS_WEST_Mumbai HO' and product= 'HRPO_CL_HSLA_1.50-1.99_1101-1890' and SALES_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-2, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-3, 0), 'yyyy-dd-MM')) GROUP BY customer, product, location,SALES_DATE;","1.	What are the sales records for the last three months for customer STP_MS_WEST_Mumbai HO and product HRPO_CL_HSLA_1.50-1.99_1101-1890?
+2.	Can you provide details of the last three months' sales for customer STP_MS_WEST_Mumbai HO related to product HRPO_CL_HSLA_1.50-1.99_1101-1890?"
+sql,Give the last 6 months sales history for PRY_OE_NORTH_Ghaziabad customer and  HRPO_CL_HSLA_1.50-1.99_1101-1890 product.,"SELECT customer AS CUSTOMER, product AS PRODUCT, location AS LOCATION, SUM(quantity) AS SALES, SALES_DATE FROM [SALES_HISTORY] WHERE customer = 'PRY_OE_NORTH_Ghaziabad' AND product = 'HRPO_CL_HSLA_1.50-1.99_1101-1890' AND SALES_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-2, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-3, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-4, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-5, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-6, 0), 'yyyy-dd-MM')) GROUP BY customer, product, location,SALES_DATE;","1.	Give the sales records for the last six months for customer PRY_OE_NORTH_Ghaziabad and product HRPO_CL_HSLA_1.50-1.99_1101-1890.
+2.	Can you provide a summary of the last six months' sales for customer PRY_OE_NORTH_Ghaziabad related to product HRPO_CL_HSLA_1.50-1.99_1101-1890?
+3.	Identify the sales figures for the last six months for the customer PRY_OE_NORTH_Ghaziabad related to product HRPO_CL_HSLA_1.50-1.99_1101-1890."
+sql,Identify customers with no sales in the last 6 months.,"select customer AS CUSTOMER,product AS PRODUCT,LOCATION, SUM(quantity) AS SALES, SALES_DATE from [SALES_HISTORY] where QUANTITY=0 and SALES_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-2, 0),'yyyy-dd-MM'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-3, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-4, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-5, 0), 'yyyy-dd-MM'),FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-6, 0), 'yyyy-dd-MM')) GROUP BY customer, product, LOCATION, SALES_DATE;","1.	List the customers and products that recorded zero sales in the past six months.
+2.	Give the details of customers and locations with no sales activity over the last six months.
+3.	Can you provide a summary of customers who did not make any sales in previous 6 months?
+4.	Identify the products sold by customers that had no sales recorded in the last six months.
+5.	What is the sales history for customers with zero sales in the last six months?
+6.	Highlight the customers and their locations that have not recorded any sales in the previous six months."
+sql,Give me the underperforming SKUs based on forecast and sales history data for previous month.,"SELECT f.PRODUCT,  f.FORECAST as FORECAST_QUANTITY, f.SALES AS ACTUAL_SALES, f.START_DATE,CASE  WHEN f.MAPE > 100 THEN 0 ELSE (100 - f.MAPE) END AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE f.START_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-MM-dd')) and lag=0 and (l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 AND ABS(100 - f.MAPE)<50) order by FORECAST_ACCURACY desc;","1.	What are the SKUs with forecast accuracy below 50% based on last month’s sales data?
+2.	List the products that achieved a forecast accuracy of less than 50% in the previous month’s sales figures.
+3.	What are the forecasted quantities and actual sales for products with MAPE values indicating poor accuracy from last month?
+4.	Can you summarize the sales performance of SKUs that underperformed according to their forecast data for last month?"
+sql,Mention the underperforming Product Group based on forecast and sales history data for previous month.,"SELECT f.PRODUCT,  f.FORECAST as FORECAST_QUANTITY, f.SALES,f.START_DATE, CASE  WHEN f.MAPE > 100 THEN 0 ELSE (100 - f.MAPE) END AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE f.START_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-MM-dd')) and lag=0 AND ((l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 AND (100 - f.MAPE)<50) OR (l.LEVEL = 1  AND p.LEVEL = 3 AND c.CUSTOMER_LEVEL = 3 AND (100 - f.MAPE) < 60) OR (l.LEVEL = 2 AND p.LEVEL = 4 AND c.CUSTOMER_LEVEL = 6 AND (100 - f.MAPE) < 70) OR (l.LEVEL = 2 AND p.LEVEL = 5 AND c.CUSTOMER_LEVEL = 7 AND (100 - f.MAPE) < 80) OR (l.LEVEL = 2 AND p.LEVEL = 6 AND c.CUSTOMER_LEVEL = 7 AND (100 - f.MAPE) < 85)) order by FORECAST_ACCURACY desc;","1.	How can I retrieve forecast accuracy for the previous month based on different levels of product considering underperforming forecasts?
+2.	Which products had forecast accuracies below a certain threshold for the last month, segmented by levels?
+3.	Provide the forecast quantities, actual sales, and forecast accuracy for the previous month, based on different underperforming product levels.
+4.	What are the forecast and sales details for the previous month where the forecast accuracy is below defined thresholds at various levels of product?
+5.	How can I analyze forecast accuracy for underperforming products at different levels, comparing forecast quantities to sales for the previous month?
+6.	Which products have the lowest forecast accuracy for the previous month, based on various product and customer levels?"
+sql,Identify the locations with low accuracy.,"SELECT f.LOCATION,L.STATE,  f.FORECAST as FORECAST_QUANTITY, f.SALES, f.START_DATE, CASE  WHEN f.MAPE > 100 THEN 0 ELSE (100 - f.MAPE) END AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE f.START_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-MM-dd')) and lag=0  and (l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 AND (100 - f.MAPE)<50) order by FORECAST_ACCURACY desc; ","1.	Which locations have a forecast accuracy below 50%, along with their respective states?
+2.	Identify the locations with the lowest forecast accuracy and their corresponding sales figures.
+3.	Provide the forecast and sales data for locations where the forecast accuracy is underperforming.
+4.	Which states have locations with low forecast accuracy based on product and customer levels?
+5.	How can I find the locations with forecast accuracy less than 50% and their associated sales and state information?
+6.	For which locations did the forecast accuracy fall below 50%, and how did sales compare to forecasts?
+7.	What are the underperforming locations by forecast accuracy, along with their respective states?"
+sql,Identify the low forecast accuracy products by customer and location.,"SELECT f.PRODUCT, f.customer, f.location, f.FORECAST AS FORECAST_QUANTITY, f.SALES, CASE  WHEN f.MAPE > 100 THEN 0 ELSE (100 - f.MAPE) END AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE f.START_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-MM-dd')) and lag=0 AND ((l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 AND (100 - f.MAPE)<50) OR (l.LEVEL = 1  AND p.LEVEL = 3 AND c.CUSTOMER_LEVEL = 3 AND (100 - f.MAPE) < 60) OR (l.LEVEL = 2 AND p.LEVEL = 4 AND c.CUSTOMER_LEVEL = 6 AND (100 - f.MAPE) < 70) OR (l.LEVEL = 2 AND p.LEVEL = 5 AND c.CUSTOMER_LEVEL = 7 AND (100 - f.MAPE) < 80) OR (l.LEVEL = 2 AND p.LEVEL = 6 AND c.CUSTOMER_LEVEL = 7 AND (100 - f.MAPE) < 85)) order by FORECAST_ACCURACY desc;","1.	Retrieve forecast accuracy for the previous month based on different levels of product, customer, and location, considering underperforming forecasts.
+2.	Give products, customers, and locations that had forecast accuracies below a certain threshold for the last month, segmented by levels.
+3.	Provide the forecast quantities, actual sales, and forecast accuracy for the previous month, based on different underperforming product, customer, and location levels.
+4.	Mention the forecast and sales details for the previous month where the forecast accuracy is below defined thresholds at various levels of product and customer.
+5.	Analyze forecast accuracy for underperforming products at different levels, comparing forecast quantities to sales for the previous month.
+6.	Give customers, products, and locations combinations that have the lowest forecast accuracy for the previous month, based on various product and customer levels."
+sql,Identify products with the higher forecast errors over the past 3 months.,"SELECT f.PRODUCT, f.FORECAST AS FORECAST_QUANTITY, f.SALES,f.FORECASTDATE AS FORECAST_DATE, f.START_DATE,  CASE  WHEN f.MAPE > 100 THEN 0 ELSE f.MAPE END AS FORECAST_ERROR FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE f.lag in(0,1,2,3) AND START_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-MM-dd'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-2, 0), 'yyyy-MM-dd'), FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-3, 0), 'yyyy-MM-dd')) AND ((l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1 AND f.MAPE> 50) OR (l.LEVEL = 1  AND p.LEVEL = 3 AND c.CUSTOMER_LEVEL = 3 AND f.MAPE > 60) OR (l.LEVEL = 2 AND p.LEVEL = 4 AND c.CUSTOMER_LEVEL = 6 AND f.MAPE > 70) OR (l.LEVEL = 2 AND p.LEVEL = 5 AND c.CUSTOMER_LEVEL = 7 AND f.MAPE > 80) OR (l.LEVEL = 2 AND p.LEVEL = 6 AND c.CUSTOMER_LEVEL = 7 AND f.MAPE > 85)) order by FORECAST_ERROR desc;","1.	Which products saw rising forecast errors over the past three months, and how did their sales compare to forecasted quantities?
+2.	Which products have shown the largest forecast error variations across different customer levels over the past three months?
+3.	Identify the products that experienced the most significant forecast errors for high-level customers and strategic locations in the last three months.
+4.	Which product categories at various customer levels had the highest forecast errors for the past quarter?
+5.	Which products have shown significant variations in forecast errors across different time lags (0, 1, 2, and 3 months) in the past three months?"
+sql,Mention the top-performing regions based on forecast accuracy.,"SELECT top 5 f.location as LOCATION,l.state AS STATE, c.region AS REGION, f.FORECAST, f.SALES, f.forecastdate AS FORECAST_DATE,f.start_date AS START_DATE, CASE  WHEN f.MAPE > 100 THEN 0 ELSE (100 - f.MAPE) END AS FORECAST_ACCURACY FROM FCSTPERFSTATIC f LEFT JOIN [LOCATION_MASTER] l ON f.LOCATION = l.LOCATION LEFT JOIN [PRODUCT_MASTER] p ON f.PRODUCT = p.PRODUCT LEFT JOIN [CUSTOMER_MASTER] c ON f.CUSTOMER = c.CUSTOMER WHERE f.START_DATE IN (FORMAT(DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), 'yyyy-MM-dd')) and lag=0 and (l.LEVEL = 1  AND p.LEVEL = 1 AND c.CUSTOMER_LEVEL = 1) order by FORECAST_ACCURACY desc;","1.	What are the top 5 locations with the highest forecast accuracy over the last month?
+2.	What are the locations with the most accurate forecasts and the lowest forecast errors in the previous month?
+3.	Identify the top locations and regions in terms of forecast accuracy for the previous month."
+sql,"Find the top 5 planning item with the highest sales volume for a given product, customer and location.","SELECT TOP 5 sh.PRODUCT as PLANNING_ITEM, sh.CUSTOMER, sh.LOCATION, sh.SALES_DATE, sh.QUANTITY AS SALES FROM [SALES_HISTORY] sh JOIN [PRODUCT_MASTER] pm ON sh.PRODUCT = pm.PRODUCT WHERE  pm.TYPE = 'PI' ORDER BY sh.QUANTITY DESC;","1.	What are the top 5 planning items with the highest sales quantity?
+2.	Identify the top 5 customers that have purchased the most of 'PI' type products.
+3.	Which locations had the highest sales quantities for 'PI' type products?
+4.	List the top 5 sales records by quantity for 'PI' type products, including customer and location details.
+5.	Which customers and locations contributed the most to sales of 'PI' type products based on quantity sold?"
+ddl,,"CREATE TABLE CAUSAL_FACTOR_VALUE (
+    CAUSALFACTOR VARCHAR(255),
+    CAUSAL_STARTDATE DATE,
+    CAUSALFACTORVALUE FLOAT,
+    DURATION INT
+);",
+ddl,,"CREATE TABLE CAUSALS (
+    CAUSALFACTOR VARCHAR(255),
+    PRODUCT VARCHAR(255),
+    CUSTOMER VARCHAR(255),
+    LOCATION VARCHAR(255),
+    Multiple_Model_Framework VARCHAR(255),
+    Multi_Linear_Regression VARCHAR(255),
+    USERNAME_ACTIVATED VARCHAR(255)
+);",
+ddl,,"CREATE TABLE CUSTOMER_MASTER (
+    CUSTOMER VARCHAR(255),
+    DESCRIPTION VARCHAR(255),
+    CUSTOMER_GROUP VARCHAR(255),
+    CUSTOMER_TYPE VARCHAR(255),
+    CUSTOMER_LEVEL INT,
+    SEGMENT VARCHAR(255),
+    REGION VARCHAR(255),
+    MARKET VARCHAR(255),
+    HIERARCHYLEVEL VARCHAR(255),
+    SALES_OFFICE VARCHAR(255),
+    CUSTOMER_TYPE_GROUP VARCHAR(255),
+    DELETE_FLAG VARCHAR(255),
+    ACTIVE_CUSTOMER VARCHAR(255)
+);",
+ddl,,"CREATE TABLE FCSTPERFSTATIC (
+    PRODUCT VARCHAR(255),
+    CUSTOMER VARCHAR(255),
+    LOCATION VARCHAR(255),
+    FORECASTDATE DATE,
+    START_DATE DATE,
+    DURATION VARCHAR(50),
+    LAG INT,
+    BASE_HISTORY FLOAT,
+    NON_BASE_HISTORY FLOAT,
+    SALES NUMERIC(18,2),
+    BASE_FORECAST FLOAT,
+    NON_BASE_FORECAST FLOAT,
+    FORECAST NUMERIC(18,2),
+    MAX_BASE_FORECAST_HISTORY FLOAT,
+    MAX_NON_BASE_FORECAST_HISTORY FLOAT,
+    MAX_TOTAL_FORECAST_HISTORY FLOAT,
+    BASE_ERROR FLOAT,
+    NON_BASE_ERROR FLOAT,
+    TOTAL_ERROR FLOAT,
+    ABS_BASE_ERROR FLOAT,
+    ABS_NON_BASE_ERROR FLOAT,
+    ABS_TOTAL_ERROR FLOAT,
+    MODEL VARCHAR(100),
+    INTERNALEVENTS INT,
+    TOTFCSTLOCKADJ INT,
+    RECONCILEDFCST FLOAT,
+    EXTERNALEVENTS INT,
+    FORECAST_OVERRIDE INT,
+    JOB_ID VARCHAR(100),
+    USER_ID VARCHAR(100),
+    ABS_PERCENT_TOTAL_ERROR FLOAT,
+    MARKET_ACTIVITY FLOAT,
+    DATA_DRIVEN_EVENTS FLOAT,
+    TARGET_IMPACT FLOAT,
+    DFU_TO_SKU_FORECAST FLOAT,
+    DFU_TO_SKU_FORECAST_ERROR FLOAT,
+    ABSPCTDFUTOSKUFCSTERROR FLOAT,
+    WMAPE FLOAT,
+    MAPE FLOAT
+);",
+ddl,,"CREATE TABLE FORECAST (
+    PRODUCT VARCHAR(255),
+    CUSTOMER VARCHAR(255),
+    LOCATION VARCHAR(255),
+    FORECAST_DATE DATE,
+    DURATION INT,
+    TYPE INT,
+    FORECAST_ID VARCHAR(100),
+    QUANTITY NUMERIC(18,2),
+    FORECAST_MODEL VARCHAR(100)
+);",
+ddl,,"CREATE TABLE LOCATION_MASTER (
+    LOCATION VARCHAR(255),
+    DESCRIPTION VARCHAR(255),
+    LEVEL INT,
+    LOCATION_TYPE VARCHAR(100),
+    ALL_LOCATION VARCHAR(255),
+    HIERARCHY_LEVEL VARCHAR(100),
+    LOCATION_LEVEL INT,
+    TYPE INT,
+    STATE_CODE INT,
+    STATE VARCHAR(100)
+);",
+ddl,,"CREATE TABLE PI_CUSTOMER_MASTER (
+    CUSTOMER VARCHAR(255),
+    CUSTOMER_NAME VARCHAR(255),
+    PLANNING_ITEM VARCHAR(255),
+    SCM_STRATEGY VARCHAR(100),
+    SALES_OFFICE VARCHAR(100),
+    STATUS VARCHAR(50)
+);",
+ddl,,"CREATE TABLE PRODUCT_MASTER (
+    PRODUCT VARCHAR(255),
+    DESCRIPTION VARCHAR(255),
+    PLANNING_ITEM VARCHAR(255),
+    STATUS VARCHAR(50),
+    [DELETE] VARCHAR(10),  -- 'DELETE' is a reserved keyword, so it's enclosed in square brackets
+    FORECAST_ITEM VARCHAR(255),
+    PRODUCT_FORM VARCHAR(100),
+    PRODUCT_VARIANT VARCHAR(100),
+    PRODUCT_GROUP VARCHAR(100),
+    PRODUCT_FAMILY VARCHAR(100),
+    TYPE VARCHAR(100),
+    BRAND VARCHAR(100),
+    SUB_BRAND VARCHAR(100),
+    COLOR VARCHAR(50),
+    COATING VARCHAR(100),
+    SURFACE VARCHAR(100),
+    THICKNESS_MINIMUM VARCHAR(50),
+    THICKNESS_MAXIMUM VARCHAR(50),
+    WIDTH_MINIMUM VARCHAR(50),
+    WIDTH_MAXIMUM FLOAT,
+    DIAMETER FLOAT,
+    DIAMETER_MINIMUM FLOAT,
+    DIAMETER_MAXIMUM FLOAT,
+    ROLLING_TYPE VARCHAR(100),
+    OUTER_PANNEL VARCHAR(100),
+    VASP VARCHAR(50),
+    NCO VARCHAR(50),
+    CPOH VARCHAR(50),
+    MARGIN VARCHAR(50),
+    LEVEL INT,
+    HIERARCHY_LEVEL VARCHAR(100),
+    ROUTE VARCHAR(100),
+    SUBROUTE VARCHAR(100),
+    PRODUCT_DIVISION_CODE INT,
+    SUB_ROUTE VARCHAR(100),
+    GRADE_GROUP VARCHAR(100)
+);",
+ddl,,"CREATE TABLE REPLENISHMENT_SKU (
+    SKU NVARCHAR(255),
+    LOCATION NVARCHAR(255),
+    DRP VARCHAR(100),
+    SCM_STRATEGY VARCHAR(100),
+    STATUS VARCHAR(50)
+);",
+ddl,,"CREATE TABLE SALES_HISTORY (
+    PRODUCT VARCHAR(255),
+    CUSTOMER VARCHAR(255),
+    LOCATION VARCHAR(255),
+    SALES_DATE DATE,
+    DURATION VARCHAR(50),
+    TYPE VARCHAR(100),
+    EVENT VARCHAR(255),
+    QUANTITY NUMERIC(18,2),
+    HISTORY_STREAM VARCHAR(100)
+);",
+ddl,,"CREATE TABLE SCHEDULES (
+    SKU VARCHAR(255),
+    PLANNING_ITEM VARCHAR(255),
+    CUSTOMER VARCHAR(255),
+    LOCATION VARCHAR(255),
+    QUANTITY INTEGER,
+    SCHEDULE_DATE DATE
+);",
+ddl,,"CREATE TABLE STG_CUSTOMER_MASTER (
+    PRODUCT_DIVISION VARCHAR(255),
+    PRODUCT_DIVISION_CODE VARCHAR(255),
+    CUSTOMER_CODE VARCHAR(255),
+    CUSTOMER_NAME VARCHAR(255),
+    CUSTOMER_GROUP VARCHAR(255),
+    CUSTOMER_GROUP_DESCRIPTION VARCHAR(255),
+    CAM_TM VARCHAR(255),
+    BM_ASM VARCHAR(255),
+    RSM_ZSM_ASH VARCHAR(255),
+    REGIONAL_MANAGER VARCHAR(255),
+    SEGMENT_HEAD VARCHAR(255),
+    PRODUCT_MANAGER VARCHAR(255),
+    PRODUCT_HEAD VARCHAR(255),
+    BRANCH VARCHAR(255),
+    REGION VARCHAR(255),
+    SUB_SECTOR VARCHAR(255),
+    MARKET VARCHAR(255),
+    UDC_CUSTOMER_TYPE VARCHAR(255),
+    UDC_PLANT_SPECIFIC VARCHAR(255),
+    UDC_NEW DATE,
+    UDC_NKG VARCHAR(255),
+    UDC_JSWONE VARCHAR(255),
+    IS_PROJECT VARCHAR(255),
+    UDC_AIKYAM VARCHAR(255),
+    UDC_EXCLUSIVE_STORE VARCHAR(255),
+    SECTOR VARCHAR(255),
+    UDC_SEGMENT VARCHAR(255),
+    UDC_CAM_TM_EMPLOYEE_CODE INTEGER,
+    UDC_BM_ASM_EMPLOYEE_CODE INTEGER,
+    UDC_RSM_ZSM_EMPLOYEE_CODE INTEGER,
+    UDC_RM_EMPLOYEE_CODE INTEGER,
+    UDC_SH_EMPLOYEE_CODE INTEGER,
+    UDC_PM_EMPLOYEE_CODE INTEGER,
+    UDC_PH_EMPLOYEE_CODE INTEGER,
+    UDC_COMPANY_CODE INTEGER,
+    UDC_ID VARCHAR(255),
+    UDC_MONTHLY_PRICING VARCHAR(255),
+    UDC_ACTIVE_CUST INTEGER,
+    UDC_CUST_TYPE_UPDATE_DATE DATE,
+    MULTI_SEGMENT INTEGER,
+    NEW_SEGMENT INTEGER,
+    UDC_OLD_SALES_OFFICE VARCHAR(255)
+);",
+documentation,,"PRODUCT_MASTER table in table catalog DEMAND_PLANNING 1 in the table_schema dbo has a column named PRODUCT which is a primary key 
+CUSTOMER_MASTER table in table catalog DEMAND_PLANNING 1 in the table_schema dbo has a column named CUSTOMER which is a primary key 
+LOCATION_MASTER table in table catalog DEMAND_PLANNING 1 in the table_schema dbo has a column named LOCATION which is a primary key 
+Columns PRODUCT_DIVISION_CODE, CUSTOMER_CODE of STG_CUSTOMER_MASTER table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table.",
+documentation,,"Columns CUSTOMER, PLANNING_ITEM of PI_CUSTOMER_MASTER table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PLANNING_ITEM column in the PI_CUSTOMER_MASTER table is a foreign key that references the PLANNING_ITEM column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the PI_CUSTOMER_MASTER table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER_NAME column in the PI_CUSTOMER_MASTER table is a foreign key that references the CUSTOMER_GROUP column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, SALES_OFFICE column in the PI_CUSTOMER_MASTER table is a foreign key that references the SALES_OFFICE column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.",
+documentation,,"Columns SKU and LOCATION of REPENISHMENT_SKU table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The SKU column in the REPENISHMENT_SKU table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the REPENISHMENT_SKU table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.",
+documentation,,"Columns SKU, PLANNING_ITEM, CUSTOMER, LOCATION, SCHEDULE_DATE of SCHEDULES table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The SKU column in the SCHEDULES table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, PLANNING_ITEM column in the SCHEDULES table is a foreign key that references the PLANNING_ITEM column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the SCHEDULES table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.",
+documentation,,"Columns CAUSALFACTOR, PRODUCT, CUSTOMER, LOCATION of CAUSALS table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PRODUCT column in the CAUSALS table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the CAUSALS table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the CAUSALS table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.
+Columns CAUSALFACTOR, PRODUCT, CUSTOMER, LOCATION of CAUSALS table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PRODUCT column in the CAUSALS table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the CAUSALS table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the CAUSALS table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.
+Columns CAUSALFACTOR, PRODUCT, CUSTOMER, LOCATION of CAUSALS table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PRODUCT column in the CAUSALS table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the CAUSALS table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the CAUSALS table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.
+",
+documentation,,"Columns CAUSALFACTOR, CAUSAL_STARTDATE of CAUSAL_FACTOR_VALUE table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The CAUSALFACTOR column in the CAUSAL_FACTOR_VALUE table is a foreign key that references the column CAUSALFACTOR in the table CAUSALS in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.",
+documentation,,"Columns PRODUCT, CUSTOMER, LOCATION, SALES_DATE, TYPE, EVENT, HISTORY_STREAM of SALES_HISTORY table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PRODUCT column in the SALES_HISTORY table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the SALES_HISTORY table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the SALES_HISTORY table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.",
+documentation,,"Columns PRODUCT, CUSTOMER, LOCATION, FORECAST_DATE, TYPE, and FORECAST_ID of FORECAST table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PRODUCT column in the FORECAST table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the FORECAST table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the FORECAST table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo.",
+documentation,,"Columns PRODUCT, CUSTOMER, LOCATION, FORECASTDATE, START_DATE, DURATION and MODEL of FCSTPERFSTATIC table in table catalog DEMAND_PLANNING 1 in the table_schema dbo, when combined, form a single concatenated primary key. However, this concatenated primary key is not explicitly defined as a single column in the table. The PRODUCT column in the FCSTPERFSTATIC table is a foreign key that references the PRODUCT column in the table PRODUCT_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, CUSTOMER column in the FCSTPERFSTATIC table is a foreign key that references the CUSTOMER column in the table CUSTOMER_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo, LOCATION column in the FCSTPERFSTATIC table is a foreign key that references the LOCATION column in the table LOCATION_MASTER in table catalog DEMAND_PLANNING 1 in the TABLE_SCHEMA dbo",
